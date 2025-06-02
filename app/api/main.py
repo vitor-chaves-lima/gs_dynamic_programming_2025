@@ -23,9 +23,10 @@ from logic.middlewares.optional_jwt import optional_jwt
 
 from logic.error_handlers import register_error_handlers
 
-logging.basicConfig(level=logging.INFO)
-logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.ERROR)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+logging.getLogger('hypercorn.error').setLevel(logging.ERROR)
+logging.getLogger('hypercorn.access').setLevel(logging.ERROR)
 
 
 def create_app():
@@ -33,6 +34,22 @@ def create_app():
 
     QuartSchema(
         app,
+        info={
+            "title": "Quiz Management System API",
+            "version": "1.0.0",
+            "description": "API for Quiz Management System",
+            "contact": {
+                "name": "Quiz API Support",
+                "email": "support@quizapi.com"
+            }
+        },
+        tags=[
+            {"name": "Authentication", "description": "User authentication and registration"},
+            {"name": "Quiz", "description": "Quiz questions and answer submission"},
+            {"name": "User", "description": "User profile and score management"},
+            {"name": "Ranking", "description": "User rankings and leaderboards"},
+            {"name": "Health", "description": "API health check endpoints"}
+        ],
         security=[{"bearerAuth": []}],
         security_schemes={
             "bearerAuth": {
@@ -61,6 +78,7 @@ def create_app():
     register_error_handlers(app)
 
     @app.route('/api/auth/register', methods=['POST'])
+    @quart_schema.tag(["Authentication"])
     @quart_schema.validate_request(CreateUserInput)
     @quart_schema.validate_response(UserOutput, 201)
     async def register(data: CreateUserInput):
@@ -70,6 +88,7 @@ def create_app():
             return result, 201
 
     @app.route('/api/auth/login', methods=['POST'])
+    @quart_schema.tag(["Authentication"])
     @quart_schema.validate_request(LoginInput)
     @quart_schema.validate_response(LoginOutput, 200)
     async def login(data: LoginInput):
@@ -79,6 +98,7 @@ def create_app():
             return result, 200
 
     @app.route('/api/questions/random', methods=['GET'])
+    @quart_schema.tag(["Quiz"])
     @quart_schema.security_scheme([])
     @quart_schema.validate_response(QuestionOutput, 200)
     @jwt_required
@@ -88,16 +108,8 @@ def create_app():
             result = await usecase.execute()
             return result, 200
 
-    @app.route('/api/score', methods=['GET'])
-    @quart_schema.validate_response(UserScoreOutput, 200)
-    @jwt_required
-    async def get_user_score():
-        async with app.async_session() as session:
-            usecase = container.get_user_score_usecase(session)
-            result = await usecase.execute(request.current_user_id)
-            return result, 200
-
     @app.route('/api/quiz/answer/<uuid:question_id>/<uuid:answer_id>', methods=['POST'])
+    @quart_schema.tag(["Quiz"])
     @quart_schema.validate_response(SubmitAnswerOutput, 200)
     @jwt_required
     async def submit_answer(question_id: str, answer_id: str):
@@ -107,7 +119,18 @@ def create_app():
             result = await usecase.execute(request.current_user_id, data)
             return result, 200
 
+    @app.route('/api/score', methods=['GET'])
+    @quart_schema.tag(["User"])
+    @quart_schema.validate_response(UserScoreOutput, 200)
+    @jwt_required
+    async def get_user_score():
+        async with app.async_session() as session:
+            usecase = container.get_user_score_usecase(session)
+            result = await usecase.execute(request.current_user_id)
+            return result, 200
+
     @app.route('/api/ranking', methods=['GET'])
+    @quart_schema.tag(["Ranking"])
     @quart_schema.validate_response(RankingOutput, 200)
     @optional_jwt
     async def get_ranking():
@@ -116,16 +139,16 @@ def create_app():
             result = await usecase.execute()
             return result, 200
 
+    @app.route('/health', methods=['GET'])
+    @quart_schema.tag(["Health"])
+    async def health_check():
+        return {"status": "healthy", "service": "quiz-api"}, 200
+
     @app.before_serving
     async def setup_database():
         async with app.db_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
-    @app.route('/health', methods=['GET'])
-    async def health_check():
-        return {"status": "healthy", "service": "quiz-api"}, 200
-
-    logger.info("Application configured successfully")
     return app
 
 
@@ -135,8 +158,11 @@ def main():
     config = Config()
     config.bind = ["0.0.0.0:8000"]
     config.debug = False
+    config.access_log_format = ""
+    config.errorlog = None
 
-    logger.info("Starting Quiz API server on 0.0.0.0:8000")
+    print("Quiz API server starting on http://0.0.0.0:8000")
+    print("API Documentation available at: http://0.0.0.0:8000/docs")
     asyncio.run(serve(app, config))
 
 
