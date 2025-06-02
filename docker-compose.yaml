@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  oracle-db:
+    image: gvenzl/oracle-xe:21-slim
+    container_name: quiz_oracle
+    environment:
+      ORACLE_DATABASE: quizdb
+      ORACLE_PASSWORD: oracle123
+      APP_USER: quiz_app
+      APP_USER_PASSWORD: quiz123
+    ports:
+      - "1521:1521"
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'SELECT 1 FROM DUAL;' | sqlplus -S quiz_app/quiz123@quizdb"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
