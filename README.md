@@ -4,9 +4,9 @@ Uma API moderna e assíncrona para sistema de quiz educativo focado em prevenç�
 
 ## Equipe
 
-Fabrício Gomes – RM  558216
-Felipe Cerboncini – RM  554909
-Vitor Chaves – RM  55706
+- Fabrício Gomes – RM  558216
+- Felipe Cerboncini – RM  554909
+- Vitor Chaves – RM  55706
 
 ## ✨ Funcionalidades
 
