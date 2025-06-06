@@ -6,7 +6,7 @@ Uma API moderna e assíncrona para sistema de quiz educativo focado em prevenç�
 
 - Fabrício Gomes – RM  558216
 - Felipe Cerboncini – RM  554909
-- Vitor Chaves – RM  55706
+- Vitor Chaves – RM  557067
 
 ## ✨ Funcionalidades
 
