@@ -2,6 +2,12 @@
 
 Uma API moderna e assíncrona para sistema de quiz educativo focado em prevenção de incêndios e queimadas, construída com **Quart** (async Flask) e **Oracle Database**.
 
+## Equipe
+
+Fabrício Gomes – RM  558216
+Felipe Cerboncini – RM  554909
+Vitor Chaves – RM  55706
+
 ## ✨ Funcionalidades
 
 - 🔐 **Autenticação JWT** completa com registro e login
